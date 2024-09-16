@@ -6,11 +6,14 @@ defmodule LivebookWeb.AuthPlug do
 
   use LivebookWeb, :verified_routes
 
+  require Logger
+
   @impl true
   def init(opts), do: opts
 
   @impl true
   def call(conn, _opts) do
+    Logger.info("AuthPlug call")
     if authenticated?(conn) do
       conn
     else
@@ -33,6 +36,7 @@ defmodule LivebookWeb.AuthPlug do
   """
   @spec authenticated?(Plug.Conn.t()) :: boolean()
   def authenticated?(conn) do
+    Logger.info("AuthPlug authenticated?")
     authenticated?(get_session(conn), conn.port)
   end
 
@@ -41,6 +45,7 @@ defmodule LivebookWeb.AuthPlug do
   """
   @spec authenticated?(map(), non_neg_integer()) :: boolean()
   def authenticated?(session, port) do
+    Logger.info("AuthPlug authenticated?/2")
     case authentication(session) do
       %{mode: :disabled} ->
         true
@@ -52,20 +57,25 @@ defmodule LivebookWeb.AuthPlug do
   end
 
   defp authenticate(conn) do
+    Logger.info("AuthPlug authenticate")
     case authentication(conn) do
       %{mode: :password} ->
+        Logger.info("AuthPlug authenticate: password")
         redirect_to_authenticate(conn)
 
       %{mode: :token, secret: secret} ->
+        Logger.info("AuthPlug authenticate: token")
         {token, query_params} = Map.pop(conn.query_params, "token")
 
         if is_binary(token) and matches_secret?(hash(token), secret) do
+          Logger.info("AuthPlug authenticate: if 1")
           # Redirect to the same path without query params
           conn
           |> store(:token, token)
           |> redirect(to: path_with_query(conn.request_path, query_params))
           |> halt()
         else
+          Logger.info("AuthPlug authenticate: if 2")
           redirect_to_authenticate(conn)
         end
     end

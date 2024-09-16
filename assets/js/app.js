@@ -8,7 +8,7 @@ import "@fontsource/red-hat-text";
 import "@fontsource/jetbrains-mono";
 
 import "phoenix_html";
-import { Socket } from "phoenix";
+import { Socket, LongPoll } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 
 import hooks from "./hooks";
@@ -27,6 +27,8 @@ import {
   registerGlobalEventHandlersForConfirm,
 } from "./confirm";
 
+  console.log("BLA BLA BLA BLA")
+
 function connect() {
   const csrfToken = document
     .querySelector("meta[name='csrf-token']")
@@ -36,6 +38,7 @@ function connect() {
     window.LIVEBOOK_BASE_URL_PATH + "/live",
     Socket,
     {
+      transport: LongPoll,
       params: (liveViewName) => {
         return {
           _csrf_token: csrfToken,
@@ -43,12 +46,16 @@ function connect() {
           user_data: loadUserData(),
           app_auth_token: loadAppAuthToken(),
           confirm_opt_out_ids: loadConfirmOptOutIds(),
+          // longpoolFallbackMs: 2500
         };
       },
       hooks: hooks,
       dom: morphdomOptions,
     },
   );
+
+  console.log(liveSocket)
+  console.log("transport longpoll")
 
   // Show progress bar on live navigation and form submits
   registerTopbar();
